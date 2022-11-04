@@ -58,9 +58,11 @@ app.post('/imageClassification', function (req, res) {
         }
         imgData[y] = row;
     }
-    var result = classifyImage(imgData);
-    console.log("result1: " + result);
-    res.json(result);
+    classifyImage(imgData).then(function (response){
+        if(response != null) {
+            res.send(response);
+        }
+    });
 });
 
 async function classifyImage(imgData) {
@@ -71,34 +73,33 @@ async function classifyImage(imgData) {
         } else {
             setTimeout(async function () {
                 result = await predict(imgData);
-                console.log("result2:" + result);
             }, 100);
         }
 
     } catch (e) {
-        return e.message;
+        return Promise.reject(e.message);
     }
-    return result;
-    //return Promise.resolve(predicted_class);
+
+     return Promise.resolve(result);
 }
 
-function predict(input) {
+async function predict(input) {
     let predicted_class = " ";
     try {
-        global.model.predict([tf.tensor(input)
+        predicted_class = await global.model.predict([tf.tensor(input)
             .reshape([-1, 256, 256, 1])])
             .array().then(function (scores) {
             scores = scores[0];
             let predicted = scores
                 .indexOf(Math.max(...scores));
             predicted_class = class_names[predicted];
-            console.log("predicted class" + predicted_class);
+            return predicted_class;
         });
+        return predicted_class;
     }
     catch(e){
         return e;
     }
-    return predicted_class;
 }
 
 // Server setup
