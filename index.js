@@ -90,9 +90,13 @@ async function predict(input) {
             .reshape([-1, 256, 256, 1])])
             .array().then(function (scores) {
             scores = scores[0];
-            let predicted = scores
-                .indexOf(Math.max(...scores));
-            predicted_class = class_names[predicted];
+            let maxScores = Math.max(...scores);
+            if(maxScores > 0.98) {
+                let predicted = scores
+                    .indexOf(Math.max(...scores));
+                predicted_class = class_names[predicted];
+            }
+            else predicted_class = "other";
             return predicted_class;
         });
         return predicted_class;
